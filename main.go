@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 
 	_ "github.com/lib/pq"
@@ -29,6 +30,10 @@ func main() {
 	}
 
 	createProductTable(db)
+
+	product := Product{"Book", 15.55, true}
+	pk := insertProduct(db, product)
+	fmt.Printf("ID = %d\n", pk)
 }
 
 func createProductTable(db *sql.DB) {
@@ -52,6 +57,14 @@ func insertProduct(db *sql.DB, product Product) int {
 	//returning int bc we want to get primary key of product we inserted
 
 	query := `INSERT INTO product (name,price, available)
-		VALES ($1.$2, $3)`
+		VALUES ($1,$2, $3) RETURNING id`
+
+	var pk int //store primary key that we're returning in the func
+	err := db.QueryRow(query, product.Name, product.Price, product.Available).Scan(&pk)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return pk
 
 }
